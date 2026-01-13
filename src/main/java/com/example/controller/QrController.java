@@ -1,7 +1,9 @@
 package com.example.controller;
 
+import com.example.dto.QrEmvcoResponseDTO;
 import com.example.dto.QrRequestDTO;
 import com.example.dto.QrResponseDTO;
+import com.example.service.QrEmvcoParserService2;
 import com.example.service.QrEmvcoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -11,11 +13,14 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/v1/qr")
 @RequiredArgsConstructor
 public class QrController {
     private final QrEmvcoService qrEmvcoService;
+    public final QrEmvcoParserService2 qrEmvcoParserService2;
 
     @PostMapping("/generate")
     public ResponseEntity<QrResponseDTO> generateQr(
@@ -23,6 +28,13 @@ public class QrController {
 
         return ResponseEntity.ok(
                 qrEmvcoService.generateEmvco(request)
+        );
+    }
+
+    @PostMapping("/parse")
+    public ResponseEntity<QrEmvcoResponseDTO> parse(@RequestBody Map<String, String> request) {
+        return ResponseEntity.ok(
+                qrEmvcoParserService2.parse(request.get("emvco"))
         );
     }
 }
