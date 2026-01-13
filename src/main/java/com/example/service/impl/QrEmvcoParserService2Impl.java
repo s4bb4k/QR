@@ -15,7 +15,7 @@ import java.util.Map;
 public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
     @Override
     public QrEmvcoResponseDTO parse(String emvco) {
-        Map<String, String> tags = EmvTlvParser.parse(emvco);
+        /*Map<String, String> tags = EmvTlvParser.parse(emvco);
         log.info("EMV TAGS PARSED: {}", tags);
 
         QrEmvcoResponseDTO response = new QrEmvcoResponseDTO();
@@ -32,7 +32,27 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
             response.setMerchantAccount(parseMerchantAccount(tags.get("26")));
         }
 
-        return response;
+        return response;*/
+
+        Map<String, String> tags = EmvTlvParser.parse(emvco);
+        log.info("EMV TAGS PARSED: {}", tags);
+
+        return QrEmvcoResponseDTO.builder()
+                .payloadFormatIndicator(tags.get("00"))
+                .pointOfInitiationMethod(tags.get("01"))
+                .merchantCategoryCode(tags.get("52"))
+                .transactionCurrency(tags.get("53"))
+                .transactionAmount(tags.get("54"))
+                .countryCode(tags.get("58"))
+                .merchantName(tags.get("59"))
+                .merchantCity(tags.get("60"))
+                .merchantAccount(
+                        tags.containsKey("26")
+                                ? parseMerchantAccount(tags.get("26"))
+                                : null
+                )
+                .build();
+
     }
 
     private MerchantAccount2DTO parseMerchantAccount(String value) {
