@@ -1,8 +1,6 @@
 package com.example.controller;
 
-import com.example.dto.QrEmvcoResponseDTO;
-import com.example.dto.QrRequestDTO;
-import com.example.dto.QrResponseDTO;
+import com.example.dto.*;
 import com.example.service.QrEmvcoParserService2;
 import com.example.service.QrEmvcoService;
 import jakarta.validation.Valid;
@@ -36,5 +34,10 @@ public class QrController {
         return ResponseEntity.ok(
                 qrEmvcoParserService2.parse(request.get("emvco"))
         );
+    }
+
+    @PostMapping("/parse")
+    public ResponseEntity<QrResponseParseDTO> parse(@RequestBody QrRequestParseDto request) {
+        return ResponseEntity.ok(qrEmvcoParserService2.parse2(request));
     }
 }

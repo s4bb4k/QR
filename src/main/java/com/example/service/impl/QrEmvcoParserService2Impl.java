@@ -1,18 +1,25 @@
 package com.example.service.impl;
 
-import com.example.dto.MerchantAccount2DTO;
-import com.example.dto.QrEmvcoResponseDTO;
-import com.example.dto.QrRequestDTO;
+import com.example.dto.*;
+import com.example.exception.ApiException;
 import com.example.service.QrEmvcoParserService2;
 import com.example.util.EmvTlvParser;
+import com.example.util.ErrorCatalog;
+import com.example.webClient.ThirdPartyQrClient;
+import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.OffsetDateTime;
 import java.util.Map;
 
 @Service
 @Slf4j
+@AllArgsConstructor
 public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
+
+    private final ThirdPartyQrClient client;
+
     @Override
     public QrEmvcoResponseDTO parse(String emvco) {
         /*Map<String, String> tags = EmvTlvParser.parse(emvco);
@@ -53,6 +60,30 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
                 )
                 .build();
 
+    }
+
+    @Override
+    public QrResponseParseDTO parse2(QrRequestParseDto request) {
+
+
+        if (request.data() == null || request.data().useCaseInformation() == null) {
+            throw new ApiException(ErrorCatalog.INVALID_CONTENT);
+        }
+
+        return client.parseQr(request.data().useCaseInformation().qrCode())
+                .map(qrData -> {
+
+                    QrResponseParseDTO.Meta meta = new QrResponseParseDTO.Meta(
+                            request.meta().requestId(),
+                            OffsetDateTime.now().toString(),
+                            "SUCCESS",
+                            "200",
+                            "OK"
+                    );
+
+                    return new QrResponseParseDTO(meta, qrData);
+                })
+                .block();
     }
 
     private MerchantAccount2DTO parseMerchantAccount(String value) {
