@@ -6,10 +6,7 @@ import com.example.service.QrEmvcoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
 
@@ -36,8 +33,44 @@ public class QrController {
         );
     }
 
-    @PostMapping("/parse")
+    @PostMapping("/parse2")
     public ResponseEntity<QrResponseParseDTO> parse(@RequestBody QrRequestParseDto request) {
         return ResponseEntity.ok(qrEmvcoParserService2.parse2(request));
+    }
+
+    @PostMapping("/generate2")
+    public ResponseEntity<QrGenerateResponseDTO> generateQr(
+            @RequestBody QrGenerateRequestDTO request) {
+
+        QrGenerateResponseDTO response = qrEmvcoParserService2.generate(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/validate")
+    public ResponseEntity<QrValidateResponseDTO> validate(
+            @RequestBody QrValidateRequestDTO request) {
+
+        QrValidateResponseDTO response = qrEmvcoParserService2.validate(request);
+        return ResponseEntity.ok(response);
+    }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<QrUpdateStatusResponseDTO> updateStatus(
+            @PathVariable("id") String qrId,
+            @RequestBody QrUpdateStatusRequestDTO request) {
+
+        QrUpdateStatusResponseDTO response =
+                qrEmvcoParserService2.updateStatus(qrId, request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<QrQueryResponseDTO> query(
+            @PathVariable("id") String qrId) {
+
+        QrQueryResponseDTO response = qrEmvcoParserService2.query(qrId);
+        return ResponseEntity.ok(response);
     }
 }

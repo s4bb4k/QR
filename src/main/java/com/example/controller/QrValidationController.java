@@ -24,7 +24,7 @@ public class QrValidationController {
     private final QrEmvcoParserService parserService;
     private final QrComparisonService comparisonService;
 
-    @PostMapping("/validate")
+    @PostMapping("/validate333")
     public ResponseEntity<QrValidationResponseDTO> validate(
             @RequestBody QrValidationRequestDTO request) {
 

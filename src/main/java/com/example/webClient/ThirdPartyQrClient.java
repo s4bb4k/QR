@@ -1,5 +1,6 @@
 package com.example.webClient;
 
+import com.example.dto.*;
 import com.example.exception.ApiException;
 import com.example.util.ErrorCatalog;
 import lombok.RequiredArgsConstructor;
@@ -20,7 +21,7 @@ public class ThirdPartyQrClient {
     public Mono<Map<String, Object>> parseQr(String qrCode) {
 
         return webClient.post()
-                .uri("/qr/parse")
+                .uri("https://bank.apihub.crt.achcolombia.com.co/ach/bk/v1/money-movement/qr")
                 .bodyValue(Map.of("qrCode", qrCode))
                 .retrieve()
                 .onStatus(
@@ -48,6 +49,41 @@ public class ThirdPartyQrClient {
                         r -> Mono.error(new ApiException(ErrorCatalog.INTERNAL_ERROR))
                 )
                 .bodyToMono(new ParameterizedTypeReference<>() {});
+    }
+
+    public Mono<QrGenerateResponseDTO> generateQr(QrGenerateRequestDTO  request) {
+        return webClient.post()
+                .uri("https://bank.apihub.crt.achcolombia.com.co/ach/bk/v1/money-movement/qr")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(QrGenerateResponseDTO.class);
+    }
+
+    public Mono<QrValidateResponseDTO> validate(QrValidateRequestDTO request) {
+        return webClient.post()
+                .uri("https://bank.apihub.crt.achcolombia.com.co/ach/bk/v1/money-movement/qr")
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(QrValidateResponseDTO.class);
+    }
+
+    public Mono<QrUpdateStatusResponseDTO> updateStatus(
+            String qrId,
+            QrUpdateStatusRequestDTO request) {
+
+        return webClient.patch()
+                .uri("https://bank.apihub.crt.achcolombia.com.co/ach/bk/v1/money-movement/qr/{id}", qrId)
+                .bodyValue(request)
+                .retrieve()
+                .bodyToMono(QrUpdateStatusResponseDTO.class);
+    }
+
+    public Mono<QrQueryResponseDTO> queryById(String qrId) {
+
+        return webClient.get()
+                .uri("https://bank.apihub.crt.achcolombia.com.co/ach/bk/v1/money-movement/qr/{id}", qrId)
+                .retrieve()
+                .bodyToMono(QrQueryResponseDTO.class);
     }
 
 }

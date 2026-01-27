@@ -86,6 +86,52 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
                 .block();
     }
 
+    @Override
+    public QrGenerateResponseDTO generate(QrGenerateRequestDTO  request) {
+        if (request == null || request.data() == null) {
+            throw new ApiException(ErrorCatalog.INVALID_CONTENT);
+        }
+
+        return client.generateQr(request)
+                .block();
+    }
+
+    @Override
+    public QrValidateResponseDTO validate(QrValidateRequestDTO request) {
+        if (request == null ||
+                request.data() == null ||
+                request.data().useCaseInformation() == null) {
+
+            throw new ApiException(ErrorCatalog.INVALID_CONTENT);
+        }
+
+        return client.validate(request)
+                .block();
+    }
+
+    @Override
+    public QrUpdateStatusResponseDTO updateStatus(String id, QrUpdateStatusRequestDTO request) {
+        if (id == null || id.isBlank() ||
+                request == null ||
+                request.data() == null) {
+
+            throw new ApiException(ErrorCatalog.INVALID_CONTENT);
+        }
+
+        return client.updateStatus(id, request)
+                .block();
+    }
+
+    @Override
+    public QrQueryResponseDTO query(String id) {
+        if (id == null || id.isBlank()) {
+            throw new ApiException(ErrorCatalog.INVALID_CONTENT);
+        }
+
+        return client.queryById(id)
+                .block();
+    }
+
     private MerchantAccount2DTO parseMerchantAccount(String value) {
 
         Map<String, String> subTags = EmvTlvParser.parse(value);
