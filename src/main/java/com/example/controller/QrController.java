@@ -5,6 +5,7 @@ import com.example.service.QrEmvcoParserService2;
 import com.example.service.QrEmvcoService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -13,6 +14,7 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/v1/qr")
 @RequiredArgsConstructor
+@Slf4j
 public class QrController {
     private final QrEmvcoService qrEmvcoService;
     public final QrEmvcoParserService2 qrEmvcoParserService2;
@@ -27,10 +29,13 @@ public class QrController {
     }
 
     @PostMapping("/parse")
-    public ResponseEntity<QrEmvcoResponseDTO> parse(@RequestBody Map<String, String> request) {
-        return ResponseEntity.ok(
+    public ResponseEntity<?> parse(@RequestBody Map<String, String> request) {
+        log.info("Received request {}", request);
+        ResponseEntity<?> response = qrEmvcoParserService2.parse(request.get("emvco"));
+        /*return ResponseEntity.ok(
                 qrEmvcoParserService2.parse(request.get("emvco"))
-        );
+        );*/
+        return ResponseEntity.ok(response.getBody());
     }
 
     @PostMapping("/parse2")

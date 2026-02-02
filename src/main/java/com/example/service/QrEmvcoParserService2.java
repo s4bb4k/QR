@@ -1,9 +1,10 @@
 package com.example.service;
 
 import com.example.dto.*;
+import org.springframework.http.ResponseEntity;
 
 public interface QrEmvcoParserService2 {
-    QrEmvcoResponseDTO parse(String emvco);
+    ResponseEntity<?> parse(String emvco);
     QrResponseParseDTO parse2(QrRequestParseDto qrRequestParseDto);
     QrGenerateResponseDTO generate(QrGenerateRequestDTO request);
     QrValidateResponseDTO validate(QrValidateRequestDTO qrValidateRequestDto);
