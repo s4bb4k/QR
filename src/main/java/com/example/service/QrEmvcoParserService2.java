@@ -10,4 +10,5 @@ public interface QrEmvcoParserService2 {
     QrValidateResponseDTO validate(QrValidateRequestDTO qrValidateRequestDto);
     QrUpdateStatusResponseDTO updateStatus(String id, QrUpdateStatusRequestDTO qrUpdateStatusRequestDto);
     QrQueryResponseDTO query(String id);
+    ResponseEntity<?> parse3(String qr);
 }

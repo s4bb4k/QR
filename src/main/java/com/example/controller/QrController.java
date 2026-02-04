@@ -78,4 +78,19 @@ public class QrController {
         QrQueryResponseDTO response = qrEmvcoParserService2.query(qrId);
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/parse3")
+    public ResponseEntity<?>  parse(@Valid @RequestBody EmvQrRequest request) {
+
+        ResponseEntity<?> response = qrEmvcoParserService2.parse3(request.qr());
+        return ResponseEntity.ok(response.getBody());
+        /*return new EmvQrResponse(
+                payload.isCrcValid(),
+                payload.getCrcValueHex(),
+                payload.getMultillaveBreB(),
+                payload.getFlat()
+        );*/
+    }
+
+
 }

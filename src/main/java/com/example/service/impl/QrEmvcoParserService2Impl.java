@@ -23,30 +23,12 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
 
     private final ThirdPartyQrClient client;
 
+    private static final int MERCHANT_ACCOUNT_START = 26;
+    private static final int MERCHANT_ACCOUNT_END = 51;
+
+
     @Override
     public ResponseEntity<?> parse(String emvco) {
-        /*log.info("emvco: {}", emvco);
-
-        Map<String, String> tags = EmvTlvParser.parseTLV(emvco);
-        log.info("EMV TAGS PARSED: {}", tags);
-
-        QrEmvcoResponseDTO response = QrEmvcoResponseDTO.builder()
-                .payloadFormatIndicator(tags.get("00"))
-                .pointOfInitiationMethod(tags.get("01"))
-                .merchantCategoryCode(tags.get("52"))
-                .transactionCurrency(tags.get("53"))
-                .transactionAmount(tags.get("54"))
-                .countryCode(tags.get("58"))
-                .merchantName(tags.get("59"))
-                .merchantCity(tags.get("60"))
-                .merchantAccount(
-                        tags.containsKey("26")
-                                ? parseMerchantAccount(tags.get("26"))
-                                : null
-                )
-                .build();
-
-        return ResponseEntity.ok(response);*/
 
         if (emvco == null || emvco.isBlank()) {
             throw new EmvParsingException(
@@ -56,11 +38,9 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
         }
 
         try {
-            log.info("EMVCo recibido");
+            Map<String, String> tags = EmvTlvParser.parseTLV2(emvco);
 
-            Map<String, String> tags = EmvTlvParser.parseTLV(emvco);
-
-            if (tags == null || tags.isEmpty()) {
+            if (tags.isEmpty()) {
                 throw new EmvParsingException(
                         EmvErrorCode.EMV_INVALID_FORMAT,
                         "No se encontraron tags EMVCo"
@@ -87,16 +67,15 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
 
             return ResponseEntity.ok(response);
 
-        } catch (EmvParsingException ex) {
-            throw ex;
-        } catch (Exception ex) {
-            log.error("Error inesperado parseando EMVCo", ex);
+        } catch (EmvParsingException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error parseando EMVCo", e);
             throw new EmvParsingException(
                     EmvErrorCode.EMV_PARSE_ERROR,
-                    ex.getMessage()
+                    e.getMessage()
             );
         }
-
 
     }
 
@@ -170,15 +149,78 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
                 .block();
     }
 
-    private MerchantAccount2DTO parseMerchantAccount(String value) {
+    @Override
+    public ResponseEntity<?> parse3(String qr) {
+        if (qr == null || qr.length() < 4) {
+            throw new EmvParsingException(
+                    EmvErrorCode.EMV_EMPTY_INPUT,
+                    "El campo emvco no puede ser nulo o vacío"
+            );
+        }
 
-        Map<String, String> subTags = EmvTlvParser.parseTLV(value);
+        try {
 
-        return MerchantAccount2DTO.builder()
-                .globallyUniqueIdentifier(subTags.get("00"))
-                .aliasType(mapAliasType(subTags.get("01"))) // 👈 AQUÍ
-                .aliasValue(subTags.get("05"))               // 👈 AQUÍ
-                .build();
+            EmvPayload response = EmvTlvParser.parse3(qr);
+
+            if (!response.isCrcValid() &&
+                    response.getCrcValueHex() == null &&
+                    response.getMultillaveBreB() == null) {
+                throw new EmvParsingException(
+                        EmvErrorCode.EMV_INVALID_FORMAT,
+                        "Formato invalido"
+                );
+            }
+
+            QrEmvcoResponseDTO dto = QrEmvcoResponseDTO.builder()
+                    .payloadFormatIndicator(response.getFlat().get("00"))
+                    .pointOfInitiationMethod(response.getFlat().get("01"))
+                    .merchantCategoryCode(response.getFlat().get("52"))
+                    .transactionCurrency(response.getFlat().get("53"))
+                    .transactionAmount(response.getFlat().get("54"))
+                    .countryCode(response.getFlat().get("58"))
+                    .merchantName(response.getFlat().get("59"))
+                    .merchantCity(response.getFlat().get("60"))
+                    .merchantAccount(
+                            MerchantAccount2DTO.builder()
+                                    .aliasValue(response.getMultillaveBreB())
+                                    .globallyUniqueIdentifier(response.getFlat().get("49.00"))
+                                    .build()
+                    )
+                    .build();
+
+            return ResponseEntity.ok(dto);
+        } catch (EmvParsingException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Error parseando EMVCo", e);
+            throw new EmvParsingException(
+                    EmvErrorCode.EMV_PARSE_ERROR,
+                    e.getMessage()
+            );
+        }
+    }
+
+    private MerchantAccount2DTO parseMerchantAccount(String rawValue) {
+
+        Map<String, String> subTags = EmvTlvParser.parseTLV(rawValue);
+        String gui = subTags.get("00");
+
+        MerchantAccount2DTO.MerchantAccount2DTOBuilder builder =
+                MerchantAccount2DTO.builder()
+                        .globallyUniqueIdentifier(gui);
+
+        if (gui == null) {
+            return builder.build();
+        }
+
+        // Lógica por PSP / dominio
+        if (gui.endsWith(".LLA")) {
+            builder.aliasValue(subTags.get("05"));
+        } else if (gui.endsWith(".RED")) {
+            builder.aliasValue(subTags.get("01"));
+        }
+
+        return builder.build();
     }
 
     private String mapAliasType(String code) {
@@ -211,7 +253,7 @@ public class QrEmvcoParserService2Impl implements QrEmvcoParserService2 {
 
     private void validateMandatoryTags(Map<String, String> tags) {
         List<String> missing = MANDATORY_TAGS.stream()
-                .filter(tag -> !tags.containsKey(tag))
+                .filter(t -> !tags.containsKey(t))
                 .toList();
 
         if (!missing.isEmpty()) {

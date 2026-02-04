@@ -3,6 +3,8 @@ package com.example.dto;
 import lombok.Builder;
 import lombok.Data;
 
+import java.util.Map;
+
 @Data
 @Builder
 public class MerchantAccount2DTO {
